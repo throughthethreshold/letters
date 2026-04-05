@@ -275,21 +275,30 @@ function bindLetters() {
 
     if (error) { alert('Error sending letter.'); return }
 
-    if (currentProfile.username === 'cierewyn') {
+   if (currentProfile.username === 'cierewyn') {
       const delayType = document.getElementById('delay-choice').value
-      const unlockAt = calculateUnlockDate(delayType)
 
-      await db.from('response_delays').insert({
-        triggered_by_message_id: msg.id,
-        delay_type: delayType,
-        unlock_at: unlockAt
-      })
+      if (delayType !== 'none') {
+        const unlockAt = calculateUnlockDate(delayType)
 
-      await sendNotificationEmail(
-        await getOtherUserEmail(),
-        'Letters — A new letter has arrived',
-        `${currentProfile.display_name} has sent you a letter. You may reply after ${formatDate(unlockAt)}.`
-      )
+        await db.from('response_delays').insert({
+          triggered_by_message_id: msg.id,
+          delay_type: delayType,
+          unlock_at: unlockAt
+        })
+
+        await sendNotificationEmail(
+          await getOtherUserEmail(),
+          'Letters — A new letter has arrived',
+          `${currentProfile.display_name} has sent you a letter. You may reply after ${formatDate(unlockAt)}.`
+        )
+      } else {
+        await sendNotificationEmail(
+          await getOtherUserEmail(),
+          'Letters — A new letter has arrived',
+          `${currentProfile.display_name} has sent you a letter.`
+        )
+      }
     } else {
       await sendNotificationEmail(
         await getOtherUserEmail(),
