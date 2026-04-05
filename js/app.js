@@ -1,7 +1,6 @@
 // ── State ──
 let currentUser = null
 let currentProfile = null
-let reflectionCleared = false
 let activeDelay = null
 
 // ── Init ──
@@ -44,12 +43,10 @@ async function bootApp(user) {
     ? "Juvae's Portal"
     : "Cierewyn's Space"
 
-  // Show delay selector only for Cierewyn
   if (profile.username === 'cierewyn') {
     document.getElementById('delay-selector').classList.remove('hidden')
   }
 
-  // Show Taika admin only for Juvae
   if (profile.username === 'juvae') {
     document.getElementById('taika-admin').classList.remove('hidden')
   } else {
@@ -98,7 +95,6 @@ function bindLoginPage() {
 
 // ── First Login Flow ──
 function bindFirstLoginFlow() {
-  // Step 1: Set password
   document.getElementById('set-password-btn').addEventListener('click', async () => {
     const newPass = document.getElementById('new-password').value
     const confirmPass = document.getElementById('confirm-password').value
@@ -133,7 +129,6 @@ function bindFirstLoginFlow() {
     document.getElementById('first-login-step-2').classList.remove('hidden')
   })
 
-  // Step 2: Save notification email
   document.getElementById('save-email-btn').addEventListener('click', async () => {
     const email = document.getElementById('notification-email').value.trim()
     const errEl = document.getElementById('email-error')
@@ -161,7 +156,6 @@ function bindFirstLoginFlow() {
     document.getElementById('first-login-step-3').classList.remove('hidden')
   })
 
-  // Step 3: Test email
   document.getElementById('test-email-btn').addEventListener('click', async () => {
     await sendNotificationEmail(
       currentProfile.notification_email,
@@ -171,7 +165,6 @@ function bindFirstLoginFlow() {
     alert('Test email sent. Please check your inbox.')
   })
 
-  // Step 3: Finish setup
   document.getElementById('finish-setup-btn').addEventListener('click', async () => {
     await db
       .from('profiles')
@@ -282,7 +275,6 @@ function bindLetters() {
 
     if (error) { alert('Error sending letter.'); return }
 
-    // If Cierewyn, set delay
     if (currentProfile.username === 'cierewyn') {
       const delayType = document.getElementById('delay-choice').value
       const unlockAt = calculateUnlockDate(delayType)
@@ -296,27 +288,20 @@ function bindLetters() {
       await sendNotificationEmail(
         await getOtherUserEmail(),
         'Letters — A new letter has arrived',
-        `${currentProfile.display_name} has sent you a letter. You may reply after ${formatDate(unlockAt)}.\n\nVisit Letters to read it.`
+        `${currentProfile.display_name} has sent you a letter. You may reply after ${formatDate(unlockAt)}.`
       )
     } else {
       await sendNotificationEmail(
         await getOtherUserEmail(),
         'Letters — A new letter has arrived',
-        `${currentProfile.display_name} has sent you a letter.\n\nVisit Letters to read it.`
+        `${currentProfile.display_name} has sent you a letter.`
       )
     }
 
     document.getElementById('compose-text').value = ''
     document.getElementById('emotional-tone').value = ''
-    reflectionCleared = false
     await loadLetters()
     await checkActiveDelay()
-  })
-
-  document.getElementById('reflection-continue').addEventListener('click', () => {
-    reflectionCleared = true
-    document.getElementById('reflection-prompt').classList.add('hidden')
-    document.getElementById('compose-area').classList.remove('hidden')
   })
 }
 
@@ -329,9 +314,7 @@ async function editDraft(id) {
 }
 
 async function sendDraft(id) {
-  const { data: draft } = await db.from('messages').select('*').eq('id', id).single()
   const now = new Date().toISOString()
-
   await db.from('messages').update({
     is_draft: false,
     sent_at: now
@@ -340,7 +323,7 @@ async function sendDraft(id) {
   await sendNotificationEmail(
     await getOtherUserEmail(),
     'Letters — A new letter has arrived',
-    `${currentProfile.display_name} has sent you a letter.\n\nVisit Letters to read it.`
+    `${currentProfile.display_name} has sent you a letter.`
   )
 
   await loadLetters()
@@ -357,13 +340,10 @@ async function checkActiveDelay() {
   const silenceEl = document.getElementById('silence-indicator')
   const silenceText = document.getElementById('silence-text')
   const composeArea = document.getElementById('compose-area')
-  const reflectionEl = document.getElementById('reflection-prompt')
 
   if (!delays || delays.length === 0) {
     silenceEl.classList.add('hidden')
-    if (currentProfile.username === 'juvae') {
-      showComposeOrReflection()
-    }
+    composeArea.classList.remove('hidden')
     return
   }
 
@@ -376,27 +356,11 @@ async function checkActiveDelay() {
     silenceEl.classList.remove('hidden')
     silenceText.textContent = `No reply expected until ${formatDate(unlockAt)}`
     composeArea.classList.add('hidden')
-    reflectionEl.classList.add('hidden')
     startCountdown(unlockAt)
   } else {
     silenceEl.classList.add('hidden')
     activeDelay = null
-    if (currentProfile.username === 'juvae') {
-      showComposeOrReflection()
-    }
-  }
-}
-
-function showComposeOrReflection() {
-  const composeArea = document.getElementById('compose-area')
-  const reflectionEl = document.getElementById('reflection-prompt')
-
-  if (reflectionCleared) {
     composeArea.classList.remove('hidden')
-    reflectionEl.classList.add('hidden')
-  } else {
-    composeArea.classList.add('hidden')
-    reflectionEl.classList.remove('hidden')
   }
 }
 
@@ -429,7 +393,7 @@ function calculateUnlockDate(delayType) {
 async function loadVisitTimes() {
   const { data: visits } = await db
     .from('visit_times')
-    .select('*, created_by_profile:profiles!visit_times_created_by_fkey(display_name), requested_by_profile:profiles!visit_times_requested_by_fkey(display_name)')
+    .select('*')
     .order('date', { ascending: true })
 
   const list = document.getElementById('visit-times-list')
@@ -440,26 +404,23 @@ async function loadVisitTimes() {
     return
   }
 
-  const now = new Date()
-  const upcoming = visits.filter(v => new Date(v.date) >= now)
-  const past = visits.filter(v => new Date(v.date) < now)
+  const todayStr = new Date().toISOString().split('T')[0]
+  const upcoming = visits.filter(v => v.date >= todayStr)
+  const past = visits.filter(v => v.date < todayStr)
 
   if (upcoming.length > 0) {
-    const upcomingHeader = document.createElement('h3')
-    upcomingHeader.textContent = 'Upcoming'
-    upcomingHeader.style.fontFamily = 'var(--font-ui)'
-    upcomingHeader.style.color = 'var(--text-secondary)'
-    list.appendChild(upcomingHeader)
+    const h = document.createElement('h3')
+    h.textContent = 'Upcoming'
+    h.style.cssText = 'font-family:var(--font-ui);color:var(--text-secondary);margin-bottom:8px;'
+    list.appendChild(h)
     upcoming.forEach(v => list.appendChild(renderVisitEntry(v)))
   }
 
   if (past.length > 0) {
-    const pastHeader = document.createElement('h3')
-    pastHeader.textContent = 'Past'
-    pastHeader.style.fontFamily = 'var(--font-ui)'
-    pastHeader.style.color = 'var(--text-secondary)'
-    pastHeader.style.marginTop = '24px'
-    list.appendChild(pastHeader)
+    const h = document.createElement('h3')
+    h.textContent = 'Past'
+    h.style.cssText = 'font-family:var(--font-ui);color:var(--text-secondary);margin-top:24px;margin-bottom:8px;'
+    list.appendChild(h)
     past.forEach(v => list.appendChild(renderVisitEntry(v)))
   }
 }
@@ -468,16 +429,26 @@ function renderVisitEntry(v) {
   const el = document.createElement('div')
   el.className = 'visit-entry'
 
-  const dateStr = new Date(v.date).toLocaleDateString('en-ZA', {
+  // Format date nicely
+  const [year, month, day] = v.date.split('-')
+  const dateObj = new Date(year, month - 1, day)
+  const dateStr = dateObj.toLocaleDateString('en-ZA', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   })
 
+  // Format time nicely
+  const formatTime = (t) => {
+    const [h, m] = t.split(':')
+    const hour = parseInt(h)
+    const ampm = hour >= 12 ? 'PM' : 'AM'
+    const hour12 = hour % 12 || 12
+    return `${hour12}:${m} ${ampm}`
+  }
+
   let actions = ''
 
-  if (currentProfile.username === 'cierewyn') {
-    if (v.status === 'available') {
-      actions = `<button class="btn-primary" onclick="confirmVisit('${v.id}')">Confirm</button>`
-    }
+  if (currentProfile.username === 'cierewyn' && v.status === 'available') {
+    actions = `<button class="btn-primary" onclick="confirmVisit('${v.id}')">Confirm</button>`
   }
 
   if (currentProfile.username === 'juvae') {
@@ -496,7 +467,7 @@ function renderVisitEntry(v) {
     <div class="visit-info">
       <div class="visit-date-time">${dateStr}</div>
       <div style="font-family:var(--font-ui);font-size:0.9rem;color:var(--text-secondary)">
-        ${v.start_time} — ${v.end_time}
+        ${formatTime(v.start_time)} — ${formatTime(v.end_time)}
       </div>
       ${v.decline_reason ? `<div class="decline-reason">Declined: ${escapeHtml(v.decline_reason)}</div>` : ''}
     </div>
@@ -509,7 +480,6 @@ function renderVisitEntry(v) {
 }
 
 function bindTaika() {
-  // Juvae: Create slot
   document.getElementById('create-visit-btn')?.addEventListener('click', async () => {
     const date = document.getElementById('visit-date').value
     const start = document.getElementById('visit-start').value
@@ -519,7 +489,9 @@ function bindTaika() {
 
     await db.from('visit_times').insert({
       created_by: currentUser.id,
-      date, start_time: start, end_time: end,
+      date,
+      start_time: start,
+      end_time: end,
       status: 'available'
     })
 
@@ -535,7 +507,6 @@ function bindTaika() {
     await loadVisitTimes()
   })
 
-  // Cierewyn: Request slot
   document.getElementById('submit-request-btn')?.addEventListener('click', async () => {
     const date = document.getElementById('request-date').value
     const start = document.getElementById('request-start').value
@@ -545,7 +516,9 @@ function bindTaika() {
 
     await db.from('visit_times').insert({
       created_by: currentUser.id,
-      date, start_time: start, end_time: end,
+      date,
+      start_time: start,
+      end_time: end,
       status: 'requested',
       requested_by: currentUser.id
     })
