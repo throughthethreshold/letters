@@ -9,12 +9,12 @@
 <body>
 
   <!-- LOGIN PAGE -->
-  <div id="page-login" class="page active">
+  <div id="page-login" class="page">
     <div class="centered-form">
       <h1 class="app-title">Letters</h1>
       <p class="app-subtitle">A space for intentional communication</p>
       <div class="form-group">
-        <input type="email" id="login-email" placeholder="Email" autocomplete="email" />
+        <input type="email" id="login-email" placeholder="Email address" autocomplete="email" />
       </div>
       <div class="form-group">
         <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
@@ -30,36 +30,32 @@
       <h2>Welcome</h2>
       <p class="subtitle">Before you begin, let's set a few things up.</p>
 
-      <!-- Step 1: Change Password -->
       <div id="first-login-step-1">
-        <h3>Step 1 — Set your password</h3>
+        <h3 style="margin-bottom:14px;">Step 1 — Set your password</h3>
         <div class="form-group">
           <input type="password" id="new-password" placeholder="New password" />
         </div>
-        <div class="form-group">
+        <div class="form-group" style="margin-top:10px;">
           <input type="password" id="confirm-password" placeholder="Confirm new password" />
         </div>
-        <button id="set-password-btn" class="btn-primary">Continue</button>
-        <p id="password-error" class="error-msg hidden"></p>
+        <button id="set-password-btn" class="btn-primary" style="margin-top:14px;width:100%;">Continue</button>
+        <p id="password-error" class="error-msg hidden" style="margin-top:8px;"></p>
       </div>
 
-      <!-- Step 2: Confirm Notification Email -->
       <div id="first-login-step-2" class="hidden">
-        <h3>Step 2 — Confirm your notification email</h3>
+        <h3 style="margin-bottom:14px;">Step 2 — Confirm your notification email</h3>
         <div class="form-group">
           <input type="email" id="notification-email" placeholder="Email address" />
         </div>
-        <button id="save-email-btn" class="btn-primary">Save & Continue</button>
-        <p id="email-error" class="error-msg hidden"></p>
+        <button id="save-email-btn" class="btn-primary" style="margin-top:14px;width:100%;">Save & Continue</button>
+        <p id="email-error" class="error-msg hidden" style="margin-top:8px;"></p>
       </div>
 
-      <!-- Step 3: Test Email -->
       <div id="first-login-step-3" class="hidden">
-        <h3>Step 3 — Test your notifications</h3>
-        <p>We've sent a test email to your address. Please check your inbox.</p>
-        <button id="test-email-btn" class="btn-secondary">Resend test email</button>
-        <br /><br />
-        <button id="finish-setup-btn" class="btn-primary">I've received it — Enter Letters</button>
+        <h3 style="margin-bottom:14px;">Step 3 — Test your notifications</h3>
+        <p class="subtitle" style="margin-bottom:16px;">We've sent a test email to your address. Please check your inbox.</p>
+        <button id="test-email-btn" class="btn-secondary" style="width:100%;margin-bottom:10px;">Resend test email</button>
+        <button id="finish-setup-btn" class="btn-primary" style="width:100%;">I've received it — Enter Letters</button>
       </div>
     </div>
   </div>
@@ -67,7 +63,6 @@
   <!-- MAIN APP -->
   <div id="page-app" class="page">
 
-    <!-- Navigation -->
     <nav class="nav">
       <span id="nav-title" class="nav-brand">Letters</span>
       <div class="nav-links">
@@ -82,21 +77,12 @@
     <div id="section-letters" class="section active">
       <div class="section-inner">
 
-        <!-- Silence indicator -->
         <div id="silence-indicator" class="silence-indicator hidden">
           <p id="silence-text"></p>
         </div>
 
-        <!-- Timeline -->
         <div id="letters-timeline" class="timeline"></div>
 
-        <!-- Reflection prompt (shown before reply unlocks) -->
-        <div id="reflection-prompt" class="reflection hidden">
-          <p>"Are you responding to be understood, or to defend?"</p>
-          <button id="reflection-continue" class="btn-secondary">Continue</button>
-        </div>
-
-        <!-- Compose area -->
         <div id="compose-area" class="compose">
           <textarea id="compose-text" placeholder="Write your letter..."></textarea>
           <div class="compose-options">
@@ -107,11 +93,9 @@
               <option value="Processing">Processing</option>
               <option value="Needs Care">Needs Care</option>
             </select>
-
-            <!-- Delay selector (Cierewyn only) -->
-            <div id="delay-selector" class="hidden">
-              <label>Allow reply in:</label>
-              <select id="delay-choice">
+            <div id="delay-selector" class="hidden" style="display:flex;align-items:center;gap:8px;">
+              <span class="delay-label">Allow reply in</span>
+              <select id="delay-choice" style="width:auto;min-width:110px;">
                 <option value="day">1 day</option>
                 <option value="week">1 week</option>
                 <option value="month">1 month</option>
@@ -130,31 +114,36 @@
     <!-- Taika Time Section -->
     <div id="section-taika" class="section">
       <div class="section-inner">
-        <h2>Taika Time</h2>
 
-        <!-- Juvae: Create slot -->
-        <div id="taika-admin" class="hidden">
-          <h3>Create a Visit Time</h3>
-          <div class="form-row">
-   <input type="date" id="visit-date" />
-<input type="text" id="visit-start" placeholder="Start time e.g. 14:30" />
-<input type="text" id="visit-end" placeholder="End time e.g. 16:00" />
-          </div>
-          <button id="create-visit-btn" class="btn-primary">Create Visit Time</button>
+        <div class="section-header">
+          <h2>Taika Time</h2>
+          <p class="subtitle">Scheduled visit times between you both.</p>
         </div>
 
-        <!-- Cierewyn: Request slot -->
-        <div id="taika-request" class="hidden">
-          <h3>Request a Visit Time</h3>
+        <div id="taika-admin" class="taika-form-block hidden">
+          <h3>Create a visit time</h3>
           <div class="form-row">
-  <input type="date" id="request-date" />
-<input type="text" id="request-start" placeholder="Start time e.g. 14:30" />
-<input type="text" id="request-end" placeholder="End time e.g. 16:00" />
+            <input type="date" id="visit-date" />
+            <input type="text" id="visit-start" placeholder="Start e.g. 14:00" />
+            <input type="text" id="visit-end" placeholder="End e.g. 16:00" />
           </div>
-          <button id="submit-request-btn" class="btn-primary">Send Request</button>
+          <div>
+            <button id="create-visit-btn" class="btn-primary">Create visit time</button>
+          </div>
         </div>
 
-        <!-- Visit times list -->
+        <div id="taika-request" class="taika-form-block hidden">
+          <h3>Request a visit time</h3>
+          <div class="form-row">
+            <input type="date" id="request-date" />
+            <input type="text" id="request-start" placeholder="Start e.g. 14:00" />
+            <input type="text" id="request-end" placeholder="End e.g. 16:00" />
+          </div>
+          <div>
+            <button id="submit-request-btn" class="btn-primary">Send request</button>
+          </div>
+        </div>
+
         <div id="visit-times-list" class="visit-list"></div>
 
       </div>
@@ -163,19 +152,24 @@
     <!-- Agreements Section -->
     <div id="section-agreements" class="section">
       <div class="section-inner">
-        <h2>Agreements</h2>
-        <p class="subtitle">A shared space to define how you communicate.</p>
-        <textarea id="agreements-text" class="agreements-editor" placeholder="Write your agreements here..."></textarea>
-        <div class="compose-actions">
-          <button id="save-agreements-btn" class="btn-primary">Save</button>
-          <p id="agreements-saved" class="success-msg hidden">Saved.</p>
+
+        <div class="section-header">
+          <h2>Agreements</h2>
+          <p class="subtitle">A shared space to define how you communicate.</p>
         </div>
+
+        <textarea id="agreements-text" class="agreements-editor" placeholder="Write your agreements here..."></textarea>
+
+        <div class="compose-actions">
+          <p id="agreements-saved" class="success-msg hidden">Saved.</p>
+          <button id="save-agreements-btn" class="btn-primary">Save</button>
+        </div>
+
       </div>
     </div>
 
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <script src="js/app.js"></script>
