@@ -587,10 +587,10 @@ window.declineVisit = async function(id) {
 }
 
 window.deleteVisit = async function(id) {
-  if (!confirm('Delete this visit time?')) return
   const { error } = await db.from('visit_times').delete().eq('id', id)
   if (error) { alert('Error deleting: ' + error.message); return }
   await loadVisitTimes()
+}
 }
 
 // ── Agreements ──
