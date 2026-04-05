@@ -480,10 +480,12 @@ function renderVisitEntry(v) {
 }
 
 function bindTaika() {
-  document.getElementById('create-visit-btn')?.addEventListener('click', async () => {
+document.getElementById('create-visit-btn')?.addEventListener('click', async () => {
     const date = document.getElementById('visit-date').value
     const start = document.getElementById('visit-start').value
     const end = document.getElementById('visit-end').value
+
+    console.log('Date:', date, 'Start:', start, 'End:', end)
 
     if (!date || !start || !end) { alert('Please fill in all fields.'); return }
 
