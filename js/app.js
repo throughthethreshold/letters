@@ -231,8 +231,8 @@ async function loadLetters() {
       ${msg.emotional_tone ? `<span class="letter-tone">${msg.emotional_tone}</span><br><br>` : ''}
       <div class="letter-content">${escapeHtml(msg.content)}</div>
       ${msg.is_draft ? `<div style="margin-top:16px;display:flex;gap:8px;">
-        <button class="btn-secondary" onclick="editDraft('${msg.id}')">Edit</button>
-        <button class="btn-primary" onclick="sendDraft('${msg.id}')">Send</button>
+        <button class="btn-secondary" onclick="window.editDraft('${msg.id}')">Edit</button>
+        <button class="btn-primary" onclick="window.sendDraft('${msg.id}')">Send</button>
       </div>` : ''}
     `
     timeline.appendChild(el)
@@ -305,7 +305,7 @@ function bindLetters() {
   })
 }
 
-async function editDraft(id) {
+window.editDraft = async function(id) {
   const { data: draft } = await db.from('messages').select('*').eq('id', id).single()
   document.getElementById('compose-text').value = draft.content
   document.getElementById('emotional-tone').value = draft.emotional_tone || ''
@@ -313,7 +313,7 @@ async function editDraft(id) {
   await loadLetters()
 }
 
-async function sendDraft(id) {
+window.sendDraft = async function(id) {
   const now = new Date().toISOString()
   await db.from('messages').update({
     is_draft: false,
@@ -429,37 +429,27 @@ function renderVisitEntry(v) {
   const el = document.createElement('div')
   el.className = 'visit-entry'
 
-  // Format date nicely
   const [year, month, day] = v.date.split('-')
   const dateObj = new Date(year, month - 1, day)
   const dateStr = dateObj.toLocaleDateString('en-ZA', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   })
 
-  // Format time nicely
-  const formatTime = (t) => {
-    const [h, m] = t.split(':')
-    const hour = parseInt(h)
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    const hour12 = hour % 12 || 12
-    return `${hour12}:${m} ${ampm}`
-  }
-
   let actions = ''
 
   if (currentProfile.username === 'cierewyn' && v.status === 'available') {
-    actions = `<button class="btn-primary" onclick="confirmVisit('${v.id}')">Confirm</button>`
+    actions = `<button class="btn-primary" onclick="window.confirmVisit('${v.id}')">Confirm</button>`
   }
 
   if (currentProfile.username === 'juvae') {
     if (v.status === 'requested') {
       actions = `
-        <button class="btn-primary" onclick="approveVisit('${v.id}')">Approve</button>
-        <button class="btn-secondary" onclick="declineVisit('${v.id}')">Decline</button>
+        <button class="btn-primary" onclick="window.approveVisit('${v.id}')">Approve</button>
+        <button class="btn-secondary" onclick="window.declineVisit('${v.id}')">Decline</button>
       `
     }
     if (v.status === 'available') {
-      actions = `<button class="btn-ghost" onclick="deleteVisit('${v.id}')">Delete</button>`
+      actions = `<button class="btn-ghost" onclick="window.deleteVisit('${v.id}')">Delete</button>`
     }
   }
 
@@ -467,7 +457,7 @@ function renderVisitEntry(v) {
     <div class="visit-info">
       <div class="visit-date-time">${dateStr}</div>
       <div style="font-family:var(--font-ui);font-size:0.9rem;color:var(--text-secondary)">
-        ${formatTime(v.start_time)} — ${formatTime(v.end_time)}
+        ${v.start_time} — ${v.end_time}
       </div>
       ${v.decline_reason ? `<div class="decline-reason">Declined: ${escapeHtml(v.decline_reason)}</div>` : ''}
     </div>
@@ -480,22 +470,22 @@ function renderVisitEntry(v) {
 }
 
 function bindTaika() {
-document.getElementById('create-visit-btn')?.addEventListener('click', async () => {
+  document.getElementById('create-visit-btn')?.addEventListener('click', async () => {
     const date = document.getElementById('visit-date').value
     const start = document.getElementById('visit-start').value
     const end = document.getElementById('visit-end').value
 
-    console.log('Date:', date, 'Start:', start, 'End:', end)
-
     if (!date || !start || !end) { alert('Please fill in all fields.'); return }
 
-    await db.from('visit_times').insert({
+    const { error } = await db.from('visit_times').insert({
       created_by: currentUser.id,
       date,
       start_time: start,
       end_time: end,
       status: 'available'
     })
+
+    if (error) { alert('Error creating visit time: ' + error.message); return }
 
     await sendNotificationEmail(
       await getOtherUserEmail(),
@@ -516,7 +506,7 @@ document.getElementById('create-visit-btn')?.addEventListener('click', async () 
 
     if (!date || !start || !end) { alert('Please fill in all fields.'); return }
 
-    await db.from('visit_times').insert({
+    const { error } = await db.from('visit_times').insert({
       created_by: currentUser.id,
       date,
       start_time: start,
@@ -524,6 +514,8 @@ document.getElementById('create-visit-btn')?.addEventListener('click', async () 
       status: 'requested',
       requested_by: currentUser.id
     })
+
+    if (error) { alert('Error submitting request: ' + error.message); return }
 
     await sendNotificationEmail(
       await getOtherUserEmail(),
@@ -538,7 +530,7 @@ document.getElementById('create-visit-btn')?.addEventListener('click', async () 
   })
 }
 
-async function confirmVisit(id) {
+window.confirmVisit = async function(id) {
   const { data: visit } = await db.from('visit_times').select('*').eq('id', id).single()
 
   await db.from('visit_times').update({
@@ -556,7 +548,7 @@ async function confirmVisit(id) {
   await loadVisitTimes()
 }
 
-async function approveVisit(id) {
+window.approveVisit = async function(id) {
   const { data: visit } = await db.from('visit_times').select('*').eq('id', id).single()
 
   await db.from('visit_times').update({
@@ -573,7 +565,7 @@ async function approveVisit(id) {
   await loadVisitTimes()
 }
 
-async function declineVisit(id) {
+window.declineVisit = async function(id) {
   const reason = prompt('Please provide a reason for declining:')
   if (!reason) return
 
@@ -594,9 +586,10 @@ async function declineVisit(id) {
   await loadVisitTimes()
 }
 
-async function deleteVisit(id) {
+window.deleteVisit = async function(id) {
   if (!confirm('Delete this visit time?')) return
-  await db.from('visit_times').delete().eq('id', id)
+  const { error } = await db.from('visit_times').delete().eq('id', id)
+  if (error) { alert('Error deleting: ' + error.message); return }
   await loadVisitTimes()
 }
 
