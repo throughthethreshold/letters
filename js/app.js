@@ -490,7 +490,7 @@ function bindTaika() {
     await sendNotificationEmail(
       await getOtherUserEmail(),
       'Letters — New Visit Time available',
-      `${currentProfile.display_name} has created a Visit Time on ${date} from ${start} to ${end}.\n\nVisit Letters to confirm it.`
+      `${currentProfile.display_name} has created a Visit Time on ${date} from ${start} to ${end}.`
     )
 
     document.getElementById('visit-date').value = ''
@@ -520,7 +520,7 @@ function bindTaika() {
     await sendNotificationEmail(
       await getOtherUserEmail(),
       'Letters — New Visit Time requested',
-      `${currentProfile.display_name} has requested a Visit Time on ${date} from ${start} to ${end}.\n\nVisit Letters to approve or decline.`
+      `${currentProfile.display_name} has requested a Visit Time on ${date} from ${start} to ${end}.`
     )
 
     document.getElementById('request-date').value = ''
@@ -532,7 +532,6 @@ function bindTaika() {
 
 window.confirmVisit = async function(id) {
   const { data: visit } = await db.from('visit_times').select('*').eq('id', id).single()
-
   await db.from('visit_times').update({
     status: 'confirmed',
     requested_by: currentUser.id,
@@ -544,13 +543,11 @@ window.confirmVisit = async function(id) {
     'Letters — Visit Time confirmed',
     `${currentProfile.display_name} has confirmed the Visit Time on ${visit.date} from ${visit.start_time} to ${visit.end_time}.`
   )
-
   await loadVisitTimes()
 }
 
 window.approveVisit = async function(id) {
   const { data: visit } = await db.from('visit_times').select('*').eq('id', id).single()
-
   await db.from('visit_times').update({
     status: 'confirmed',
     updated_at: new Date().toISOString()
@@ -559,9 +556,8 @@ window.approveVisit = async function(id) {
   await sendNotificationEmail(
     await getOtherUserEmail(),
     'Letters — Visit Time approved',
-    `${currentProfile.display_name} has approved your Visit Time request for ${visit.date} from ${visit.start_time} to ${visit.end_time}.`
+    `${currentProfile.display_name} has approved your Visit Time request for ${visit.date}.`
   )
-
   await loadVisitTimes()
 }
 
@@ -570,7 +566,6 @@ window.declineVisit = async function(id) {
   if (!reason) return
 
   const { data: visit } = await db.from('visit_times').select('*').eq('id', id).single()
-
   await db.from('visit_times').update({
     status: 'declined',
     decline_reason: reason,
@@ -580,9 +575,8 @@ window.declineVisit = async function(id) {
   await sendNotificationEmail(
     await getOtherUserEmail(),
     'Letters — Visit Time declined',
-    `${currentProfile.display_name} has declined the Visit Time request for ${visit.date}.\n\nReason: ${reason}`
+    `${currentProfile.display_name} has declined the Visit Time for ${visit.date}.\n\nReason: ${reason}`
   )
-
   await loadVisitTimes()
 }
 
@@ -590,7 +584,6 @@ window.deleteVisit = async function(id) {
   const { error } = await db.from('visit_times').delete().eq('id', id)
   if (error) { alert('Error deleting: ' + error.message); return }
   await loadVisitTimes()
-}
 }
 
 // ── Agreements ──
